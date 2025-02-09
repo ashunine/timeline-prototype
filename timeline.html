@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline Wave Effect</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #111;
+            overflow: hidden;
+        }
+        .timeline {
+            display: flex;
+            gap: 10px;
+            position: relative;
+        }
+        .line {
+            width: 1px;
+            height: 50px;
+            background-color: gray;
+            transition: transform 0.2s ease-out, background-color 0.2s ease-out;
+            transform-origin: center;
+            position: relative;
+        }
+        .line::before {
+            content: "";
+            position: absolute;
+            left: -5px;
+            right: -5px;
+            top: 0;
+            bottom: 0;
+            background: transparent;
+        }
+        .active {
+            transform: scaleY(1.2) !important;
+            background-color: red !important;
+        }
+        .pointer {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 10px solid red;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="timeline"></div>
+    <script>
+        const timeline = document.querySelector(".timeline");
+        const lineCount = 40;
+        const defaultHeight = 50;
+        const maxHeight = 100;
+        const influenceRange = 5; // Number of lines influenced
+        const defaultGray = 128; // Gray intensity for default lines
+        let activeLine = null;
+        let pointer = document.createElement("div");
+        pointer.classList.add("pointer");
+        timeline.appendChild(pointer);
+        
+        for (let i = 0; i < lineCount; i++) {
+            const line = document.createElement("div");
+            line.classList.add("line");
+            timeline.appendChild(line);
+        }
+        
+        const lines = document.querySelectorAll(".line");
+        
+        timeline.addEventListener("mousemove", (e) => {
+            const rect = timeline.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const index = Math.floor(mouseX / (rect.width / lineCount));
+            
+            lines.forEach((line, i) => {
+                if (line !== activeLine) {
+                    const distance = Math.abs(i - index);
+                    const stretchFactor = Math.max(0, (influenceRange - distance) / influenceRange);
+                    const newHeight = defaultHeight + stretchFactor * (maxHeight - defaultHeight);
+                    line.style.transform = `scaleY(${newHeight / defaultHeight})`;
+                    
+                    // Calculate color transition from gray to white based on distance
+                    const colorIntensity = Math.floor(defaultGray + stretchFactor * (255 - defaultGray));
+                    line.style.backgroundColor = `rgb(${colorIntensity}, ${colorIntensity}, ${colorIntensity})`;
+                }
+            });
+        });
+        
+        timeline.addEventListener("mouseleave", () => {
+            lines.forEach(line => {
+                if (line !== activeLine) {
+                    line.style.transform = "scaleY(1)";
+                    line.style.backgroundColor = `rgb(${defaultGray}, ${defaultGray}, ${defaultGray})`;
+                }
+            });
+        });
+        
+        lines.forEach((line, index) => {
+            line.addEventListener("click", (e) => {
+                if (activeLine) {
+                    activeLine.classList.remove("active");
+                    activeLine.style.transform = "scaleY(1)";
+                    activeLine.style.backgroundColor = `rgb(${defaultGray}, ${defaultGray}, ${defaultGray})`;
+                }
+                activeLine = e.target;
+                activeLine.classList.add("active");
+                
+                // Move pointer relative to selected line
+                const timelineRect = timeline.getBoundingClientRect();
+                const rect = activeLine.getBoundingClientRect();
+                pointer.style.left = `${rect.left - timelineRect.left + rect.width / 2 - 5}px`;
+                pointer.style.top = `-30px`;
+                pointer.style.display = "block";
+            });
+        });
+    </script>
+</body>
+</html>
