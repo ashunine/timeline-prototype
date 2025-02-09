@@ -68,7 +68,7 @@
     <div class="instruction-text">Hover over timeline to experience prototype</div>
     <script>
         const timeline = document.querySelector(".timeline");
-        const lineCount = 40;
+        const lineCount = 30;
         const defaultHeight = 50;
         const maxHeight = 100;
         const influenceRange = 5;
@@ -81,6 +81,7 @@
         for (let i = 0; i < lineCount; i++) {
             const line = document.createElement("div");
             line.classList.add("line");
+            line.addEventListener("click", () => updateSelection(i));
             timeline.appendChild(line);
         }
         
@@ -88,61 +89,93 @@
         
         // Pre-select center line
         const centerIndex = Math.floor(lineCount / 2);
-        activeLine = lines[centerIndex];
-        activeLine.classList.add("active");
-        activeLine.style.transform = "scaleY(1.2)";
-        activeLine.style.backgroundColor = "red";
+        updateSelection(centerIndex);
         
-        // Position pointer for pre-selected center line
-        const timelineRect = timeline.getBoundingClientRect();
-        const centerRect = activeLine.getBoundingClientRect();
-        pointer.style.left = `${centerRect.left - timelineRect.left + centerRect.width / 2 - 5}px`;
-        pointer.style.top = "-40px";
-        pointer.style.display = "block";
-        
-        timeline.addEventListener("mousemove", (e) => {
-            const rect = timeline.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const index = Math.floor(mouseX / (rect.width / lineCount));
+        function updateSelection(index) {
+            if (activeLine) {
+                activeLine.classList.remove("active");
+                activeLine.style.transform = "scaleY(1)";
+                activeLine.style.backgroundColor = `rgb(${defaultGray}, ${defaultGray}, ${defaultGray})`;
+            }
+            activeLine = lines[index];
+            activeLine.classList.add("active");
+            activeLine.style.transform = "scaleY(1.2)";
+            activeLine.style.backgroundColor = "red";
             
-            lines.forEach((line, i) => {
-                if (line !== activeLine) {
-                    const distance = Math.abs(i - index);
-                    const stretchFactor = Math.max(0, (influenceRange - distance) / influenceRange);
-                    const newHeight = defaultHeight + stretchFactor * (maxHeight - defaultHeight);
-                    line.style.transform = `scaleY(${newHeight / defaultHeight})`;
-                    
-                    const colorIntensity = Math.floor(defaultGray + stretchFactor * (255 - defaultGray));
-                    line.style.backgroundColor = `rgb(${colorIntensity}, ${colorIntensity}, ${colorIntensity})`;
-                }
-            });
-        });
-        
-        timeline.addEventListener("mouseleave", () => {
-            lines.forEach(line => {
-                if (line !== activeLine) {
-                    line.style.transform = "scaleY(1)";
-                    line.style.backgroundColor = `rgb(${defaultGray}, ${defaultGray}, ${defaultGray})`;
-                }
-            });
-        });
-        
-        lines.forEach((line, index) => {
-            line.addEventListener("click", (e) => {
-                if (activeLine) {
-                    activeLine.classList.remove("active");
-                    activeLine.style.transform = "scaleY(1)";
-                    activeLine.style.backgroundColor = `rgb(${defaultGray}, ${defaultGray}, ${defaultGray})`;
-                }
-                activeLine = e.target;
-                activeLine.classList.add("active");
+            const timelineRect = timeline.getBoundingClientRect();
+            const rect = activeLine.getBoundingClientRect();
+            pointer.style.left = `${rect.left - timelineRect.left + rect.width / 2 - 5}px`;
+            pointer.style.top = "-40px";
+            pointer.style.display = "block";
+        }
+
+        if (window.innerWidth > 800) {
+            timeline.addEventListener("mousemove", (e) => {
+                const rect = timeline.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const index = Math.floor(mouseX / (rect.width / lineCount));
                 
-                const rect = activeLine.getBoundingClientRect();
-                pointer.style.left = `${rect.left - timelineRect.left + rect.width / 2 - 5}px`;
-                pointer.style.top = "-40px";
-                pointer.style.display = "block";
+                lines.forEach((line, i) => {
+                    if (line !== activeLine) {
+                        const distance = Math.abs(i - index);
+                        const stretchFactor = Math.max(0, (influenceRange - distance) / influenceRange);
+                        const newHeight = defaultHeight + stretchFactor * (maxHeight - defaultHeight);
+                        line.style.transform = `scaleY(${newHeight / defaultHeight})`;
+                        
+                        const colorIntensity = Math.floor(defaultGray + stretchFactor * (255 - defaultGray));
+                        line.style.backgroundColor = `rgb(${colorIntensity}, ${colorIntensity}, ${colorIntensity})`;
+                    }
+                });
             });
-        });
+            
+            timeline.addEventListener("mouseleave", () => {
+                lines.forEach(line => {
+                    if (line !== activeLine) {
+                        line.style.transform = "scaleY(1)";
+                        line.style.backgroundColor = `rgb(${defaultGray}, ${defaultGray}, ${defaultGray})`;
+                    }
+                });
+            });
+        } else {
+            const textCopy = document.querySelector(".instruction-text");
+            textCopy.textContent = "Drag over timeline to experience prototype";
+            let isDragging = false;
+            timeline.addEventListener("touchstart", (e) => {
+                isDragging = true;
+                const touchX = e.touches[0].clientX - timeline.getBoundingClientRect().left;
+                const index = Math.floor(touchX / (timeline.getBoundingClientRect().width / lineCount));
+                updateSelection(index);
+            });
+            
+            timeline.addEventListener("touchmove", (e) => {
+                if (isDragging) {
+                    const touchX = e.touches[0].clientX - timeline.getBoundingClientRect().left;
+                    const index = Math.floor(touchX / (timeline.getBoundingClientRect().width / lineCount));
+                    updateSelection(index);
+                  lines.forEach((line, i) => {
+                    if (line !== activeLine) {
+                        const distance = Math.abs(i - index);
+                        const stretchFactor = Math.max(0, (influenceRange - distance) / influenceRange);
+                        const newHeight = defaultHeight + stretchFactor * (maxHeight - defaultHeight);
+                        line.style.transform = `scaleY(${newHeight / defaultHeight})`;
+                        
+                        const colorIntensity = Math.floor(defaultGray + stretchFactor * (255 - defaultGray));
+                        line.style.backgroundColor = `rgb(${colorIntensity}, ${colorIntensity}, ${colorIntensity})`;
+                    }
+                });
+                }
+            });
+            
+            timeline.addEventListener("touchend", () => {
+                isDragging = false;
+              lines.forEach(line => {
+                    if (line !== activeLine) {
+                        line.style.transform = "scaleY(1)";
+                        line.style.backgroundColor = `rgb(${defaultGray}, ${defaultGray}, ${defaultGray})`;
+                    }
+                });
+            });
+        }
     </script>
 </body>
 </html>
