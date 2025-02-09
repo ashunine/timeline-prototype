@@ -7,6 +7,7 @@
     <style>
         body {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -48,10 +49,19 @@
             border-top: 10px solid red;
             display: none;
         }
+        .instruction-text {
+            margin-top: 60px;
+            color: gray;
+            font-family: sans-serif;
+            font-size: 14px;
+            font-weight: 100;
+            letter-spacing: 0.6px;
+        }
     </style>
 </head>
 <body>
     <div class="timeline"></div>
+    <div class="instruction-text">Hover over timeline to experience prototype</div>
     <script>
         const timeline = document.querySelector(".timeline");
         const lineCount = 40;
@@ -114,7 +124,7 @@
                 const timelineRect = timeline.getBoundingClientRect();
                 const rect = activeLine.getBoundingClientRect();
                 pointer.style.left = `${rect.left - timelineRect.left + rect.width / 2 - 5}px`;
-                pointer.style.top = `-30px`;
+                pointer.style.top = `-40px`;
                 pointer.style.display = "block";
             });
         });
