@@ -26,6 +26,10 @@
             transition: transform 0.2s ease-out, background-color 0.2s ease-out;
             transform-origin: center;
             position: relative;
+            cursor: pointer;
+        }
+        .line.active {
+            cursor: default;
         }
         .line::before {
             content: "";
@@ -40,7 +44,7 @@
             transform: scaleY(1.2) !important;
             background-color: red !important;
         }
-        .pointer {
+        .redpointer {
             position: absolute;
             width: 0;
             height: 0;
@@ -54,7 +58,7 @@
             color: gray;
             font-family: sans-serif;
             font-size: 14px;
-            font-weight: 100;
+            font-weight: 200;
             letter-spacing: 0.6px;
         }
     </style>
@@ -67,11 +71,11 @@
         const lineCount = 40;
         const defaultHeight = 50;
         const maxHeight = 100;
-        const influenceRange = 5; // Number of lines influenced
-        const defaultGray = 128; // Gray intensity for default lines
+        const influenceRange = 5;
+        const defaultGray = 128;
         let activeLine = null;
         let pointer = document.createElement("div");
-        pointer.classList.add("pointer");
+        pointer.classList.add("redpointer");
         timeline.appendChild(pointer);
         
         for (let i = 0; i < lineCount; i++) {
@@ -81,6 +85,20 @@
         }
         
         const lines = document.querySelectorAll(".line");
+        
+        // Pre-select center line
+        const centerIndex = Math.floor(lineCount / 2);
+        activeLine = lines[centerIndex];
+        activeLine.classList.add("active");
+        activeLine.style.transform = "scaleY(1.2)";
+        activeLine.style.backgroundColor = "red";
+        
+        // Position pointer for pre-selected center line
+        const timelineRect = timeline.getBoundingClientRect();
+        const centerRect = activeLine.getBoundingClientRect();
+        pointer.style.left = `${centerRect.left - timelineRect.left + centerRect.width / 2 - 5}px`;
+        pointer.style.top = "-40px";
+        pointer.style.display = "block";
         
         timeline.addEventListener("mousemove", (e) => {
             const rect = timeline.getBoundingClientRect();
@@ -94,7 +112,6 @@
                     const newHeight = defaultHeight + stretchFactor * (maxHeight - defaultHeight);
                     line.style.transform = `scaleY(${newHeight / defaultHeight})`;
                     
-                    // Calculate color transition from gray to white based on distance
                     const colorIntensity = Math.floor(defaultGray + stretchFactor * (255 - defaultGray));
                     line.style.backgroundColor = `rgb(${colorIntensity}, ${colorIntensity}, ${colorIntensity})`;
                 }
@@ -120,11 +137,9 @@
                 activeLine = e.target;
                 activeLine.classList.add("active");
                 
-                // Move pointer relative to selected line
-                const timelineRect = timeline.getBoundingClientRect();
                 const rect = activeLine.getBoundingClientRect();
                 pointer.style.left = `${rect.left - timelineRect.left + rect.width / 2 - 5}px`;
-                pointer.style.top = `-40px`;
+                pointer.style.top = "-40px";
                 pointer.style.display = "block";
             });
         });
